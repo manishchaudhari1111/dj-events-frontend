@@ -5,6 +5,7 @@ import Footer from "./Footer";
 
 import styles from "@/styles/Layout.module.css";
 import Showcase from "./Showcase";
+import { API_URL } from "@/config";
 
 const Layout = ({ title, description, keywords, children }) => {
   const router = useRouter();
