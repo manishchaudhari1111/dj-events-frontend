@@ -1,11 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
+import qs from "qs";
 import Layout from "@/components/Layout";
 import { API_URL } from "@/config";
 
 import styles from "@/styles/Event.module.css";
 
-export default function EventDetailPage({ evt }) {
+export default function EventDetailPage({ event: evt }) {
   return (
     <Layout title="Event Details Page">
       <div className={styles.event}>
@@ -16,7 +17,11 @@ export default function EventDetailPage({ evt }) {
         <div className={styles.controls}></div>
         {evt.image && (
           <div className={styles.image}>
-            <Image src={evt.image} width={960} height={600} />
+            <Image
+              src={evt.image.formats.medium.url}
+              width={960}
+              height={600}
+            />
           </div>
         )}
 
@@ -38,10 +43,13 @@ export default function EventDetailPage({ evt }) {
 }
 
 export async function getStaticPaths() {
+  const query = qs.stringify({
+    populate: ["image"],
+  });
   const res = await fetch(`${API_URL}/api/events`);
   const events = await res.json();
 
-  const paths = events.map((evnt) => ({ params: { slug: evnt.slug } }));
+  const paths = events.data.map((evnt) => ({ params: { slug: evnt.slug } }));
 
   return {
     paths,
@@ -50,12 +58,20 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params: { slug } }) {
-  const res = await fetch(`${API_URL}/api/events/${slug}`);
-  const events = await res.json();
-
+  const query = qs.stringify({
+    filters: {
+      slug: {
+        $eq: `${slug}`,
+      },
+    },
+    populate: ["image"],
+  });
+  const res = await fetch(`${API_URL}/api/events?${query}`);
+  const event = await res.json();
+  console.log("event===", event);
   return {
     props: {
-      evt: events[0],
+      event: event?.data[0],
     },
   };
 }

@@ -1,10 +1,14 @@
 import Layout from "@/components/Layout";
 import EventItem from "@/components/EventItem";
 import { API_URL } from "@/config";
+import qs from "qs";
+import { useRouter } from "next/router";
 
 export default function EventsListingPage({ events }) {
+  const router = useRouter();
   return (
-    <Layout title="Events List Page">
+    <Layout title="Search Results Page">
+      <h1>Search results for "{router.query.term}"</h1>
       {events.length === 0 && <h3>No events to show</h3>}
 
       {events.map((evt) => (
@@ -14,9 +18,13 @@ export default function EventsListingPage({ events }) {
   );
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps({ query: { term } }) {
   const query = qs.stringify({
-    sort: ["date:asc"],
+    filters: {
+      name: {
+        $contains: term,
+      },
+    },
     populate: ["image"],
     pagination: {
       pageSize: 10,
@@ -25,6 +33,7 @@ export async function getServerSideProps() {
   });
   const res = await fetch(`${API_URL}/api/events?${query}`);
   const events = await res.json();
+  console.log("searchTerm", events);
   return {
     props: {
       events: events?.data || [],
